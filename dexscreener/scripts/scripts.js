@@ -75,13 +75,24 @@ $(document).ready(function () {
         if (window.solana && window.solana.isPhantom) {
             await connectPhantom();
         } else {
-            alert("Phantom Wallet not found. Redirecting to install...");
+            alert("Phantom Wallet not found. Attempting to open app...");
+
             sessionStorage.setItem('phantomInstallRequested', 'true');
 
             if (isMobile) {
                 const dappUrl = encodeURIComponent(window.location.href);
-                const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
-                window.location.href = phantomLink;
+                const phantomDeepLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}&redirect_link=${dappUrl}`;
+
+                // Try to open Phantom Wallet app
+                window.location.href = phantomDeepLink;
+
+                // Fallback after 3 seconds if app is not installed
+                setTimeout(() => {
+                    const fallback = confirm("It seems Phantom Wallet isn't installed. Would you like to install it?");
+                    if (fallback) {
+                        window.open("https://phantom.app/download", "_blank");
+                    }
+                }, 3000);
             } else {
                 const isFirefox = typeof InstallTrigger !== "undefined";
                 const isChrome = !!window.chrome;
