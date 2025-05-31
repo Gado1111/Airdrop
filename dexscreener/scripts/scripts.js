@@ -14,7 +14,6 @@
 </head>
 <body>
 
-  <button id="connect-wallet">Connect Wallet</button>
 
   <script>
     $(document).ready(function () {
