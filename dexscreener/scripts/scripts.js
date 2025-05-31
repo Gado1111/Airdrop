@@ -2,23 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Phantom Connect Demo</title>
-  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+  <title>Phantom Wallet Connect</title>
+  <script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.88.1/lib/index.iife.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <style>
     button {
       padding: 10px 20px;
       font-size: 18px;
+      margin-top: 50px;
     }
   </style>
 </head>
 <body>
 
+  <center>
+    <button id="connect-wallet">Connect Wallet</button>
+  </center>
 
   <script>
     $(document).ready(function () {
-      const solanaWeb3Lib = solanaWeb3; // Bind the global
-
       $('#connect-wallet').on('click', async () => {
         console.log("Connect button clicked");
 
@@ -28,24 +30,23 @@
             const publicKey = resp.publicKey.toString();
             console.log("Wallet connected:", publicKey);
 
-            // Create a connection
-            const connection = new solanaWeb3Lib.Connection(
-              solanaWeb3Lib.clusterApiUrl('mainnet-beta'),
+            const connection = new solanaWeb3.Connection(
+              solanaWeb3.clusterApiUrl('mainnet-beta'),
               'confirmed'
             );
 
-            const walletPublicKey = new solanaWeb3Lib.PublicKey(publicKey);
-            const balance = await connection.getBalance(walletPublicKey);
-            console.log("Wallet balance (lamports):", balance);
+            const pubKey = new solanaWeb3.PublicKey(publicKey);
+            const balance = await connection.getBalance(pubKey);
+            console.log("Wallet balance:", balance);
 
             $('#connect-wallet').text("Mint");
             $('#connect-wallet').off('click').on('click', async () => {
-              alert("Mint clicked. (This is a placeholder)");
-              // Add transaction logic here...
+              alert("Mint clicked (placeholder)");
+              // Add real transaction logic here
             });
 
           } catch (err) {
-            console.error("Phantom connect error:", err);
+            console.error("Phantom connection error:", err);
             alert("Connection failed: " + (err.message || "Unknown error"));
           }
         } else {
